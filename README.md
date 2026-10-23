@@ -42,7 +42,7 @@ O contato usa o endereço associado à conta GitHub de Liandro. Fontes DM Sans e
 
 ## Direção de movimento e retrato
 
-- Retrato fornecido por Liandro, preservado visualmente e codificado em WebP (`public/images/liandro.webp`, cerca de 98 KB).
+- Retrato de estúdio gerado a partir da foto fornecida por Liandro, com remoção do colar, troca de roupa e cenário e instruções de preservação da identidade. Arquivo usado: `public/images/liandro-studio.webp` (cerca de 140 KB). A versão anterior foi preservada.
 - Hero com entrada de letras, revelação da foto e parallax por ponteiro/rolagem.
 - Monograma LC com geometria extrudada em Three.js. Carregado sob demanda; fallback em HTML se WebGL não estiver disponível. Renderização pausada fora da área visível e quando a aba fica oculta; geometrias e listeners descartados ao desmontar.
 - Navegação em tela cheia com foco contido, Escape e restauração de foco.
@@ -53,3 +53,9 @@ O contato usa o endereço associado à conta GitHub de Liandro. Fontes DM Sans e
 ### Testes
 
 `npm test` valida os fluxos de tema (inclusive armazenamento bloqueado), menu e foco, navegação dos cases, abas por teclado, processo e cópia de contato em DOM simulado. Esses testes não substituem inspeção visual e verificação de WebGL em navegador real.
+
+## Edição de estúdio
+
+Inclui narrativa visual vinculada à rolagem, cartões de projetos sobrepostos em desktops altos, órbitas e satélites no LC 3D, elementos flutuantes no retrato e luz animada. O movimento não altera o rosto da fotografia. Em telas pequenas os projetos continuam em lista; com redução de movimento a narrativa permanece estática e os cartões não ficam sobrepostos.
+
+Retrato criado com a ferramenta integrada de geração de imagens. Direção utilizada: preservar a identidade, proporções faciais, tom de pele, textura, cabelo, barba leve e óculos retangulares; remover colar; usar camiseta preta e sobrecamisa grafite sem marcas; cenário de estúdio cinza com luz violeta discreta; iluminação suave, expressão natural e enquadramento do torso para cima.

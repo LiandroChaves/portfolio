@@ -31,6 +31,10 @@ export default function Monogram({ variant = 'hero' }: { variant?: 'hero' | 'pro
     const ringMaterial = new THREE.MeshStandardMaterial({ color: 0xb5acff, metalness: .4, roughness: .35, transparent: true, opacity: .35 });
     const ring = new THREE.Mesh(new THREE.TorusGeometry(2.45, .012, 6, 120), ringMaterial);
     ring.rotation.x = .65; group.add(ring);
+    const outerRing = new THREE.Mesh(new THREE.TorusGeometry(2.65, .018, 6, 120), ringMaterial);
+    outerRing.rotation.set(-.7, .5, .2); group.add(outerRing);
+    const satelliteGeometry = new THREE.OctahedronGeometry(.10);
+    const satellites = Array.from({length: 3}, (_,i) => { const mesh = new THREE.Mesh(satelliteGeometry, material); mesh.position.set(Math.cos(i*2.1)*2.45,Math.sin(i*2.1)*2.45,0); group.add(mesh);return mesh; });
     scene.add(new THREE.AmbientLight(0xffffff, 2));
     const key = new THREE.DirectionalLight(0xffffff, 4); key.position.set(2, 4, 5); scene.add(key);
     const rim = new THREE.DirectionalLight(0x8c7dff, 5); rim.position.set(-4, 1, -2); scene.add(rim);
@@ -48,6 +52,11 @@ export default function Monogram({ variant = 'hero' }: { variant?: 'hero' | 'pro
       group.position.y = calm ? 0 : Math.sin(time * .001) * .1;
       const separation = variant === 'process' && !calm ? (Math.sin(time * .0007) + 1) * .12 : 0;
       left.position.x = -separation; right.position.x = separation;
+      if (!calm) {
+        ring.rotation.z = time * .00025;
+        outerRing.rotation.z = -time * .00018;
+        satellites.forEach((satellite, index) => { const angle = time * .0005 + index * 2.1; satellite.position.set(Math.cos(angle)*2.45, Math.sin(angle)*1.7, Math.sin(angle)*1.1); satellite.rotation.y = angle; });
+      }
       renderer.render(scene, camera);
       if (!calm) frame = requestAnimationFrame(render);
     };
@@ -59,7 +68,7 @@ export default function Monogram({ variant = 'hero' }: { variant?: 'hero' | 'pro
     const contextLost = (event: Event) => { event.preventDefault(); lost = true; cancelAnimationFrame(frame); el.classList.remove('webgl-ready'); };
     renderer.domElement.addEventListener('webglcontextlost', contextLost);
     window.addEventListener('pointermove', move, { passive: true }); document.addEventListener('visibilitychange', start); motion.addEventListener('change', start);
-    return () => { cancelAnimationFrame(frame); resize.disconnect(); observer.disconnect(); theme.disconnect(); window.removeEventListener('pointermove', move); document.removeEventListener('visibilitychange', start); motion.removeEventListener('change', start); renderer.domElement.removeEventListener('webglcontextlost', contextLost); left.geometry.dispose(); right.geometry.dispose(); ring.geometry.dispose(); material.dispose(); ringMaterial.dispose(); renderer.dispose(); renderer.domElement.remove(); el.classList.remove('webgl-ready'); };
+    return () => { cancelAnimationFrame(frame); resize.disconnect(); observer.disconnect(); theme.disconnect(); window.removeEventListener('pointermove', move); document.removeEventListener('visibilitychange', start); motion.removeEventListener('change', start); renderer.domElement.removeEventListener('webglcontextlost', contextLost); left.geometry.dispose(); right.geometry.dispose(); ring.geometry.dispose(); outerRing.geometry.dispose(); satelliteGeometry.dispose(); material.dispose(); ringMaterial.dispose(); renderer.dispose(); renderer.domElement.remove(); el.classList.remove('webgl-ready'); };
   }, [variant]);
   return <div ref={host} className={`sculpture sculpture-${variant}`} aria-hidden="true"><span className="sculpture-fallback">LC<span>·</span></span></div>;
 }
