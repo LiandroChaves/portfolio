@@ -30,7 +30,7 @@ O build estático fica em `dist/`. Pode ser publicado na Vercel, Netlify ou outr
 
 ## Conteúdo
 
-Edite `src/data.ts` para atualizar projetos e etapas. Os componentes ficam em `src/main.tsx`, e os tokens e estilos em `src/styles.css`.
+Edite `src/data.ts` para atualizar projetos e etapas. A aplicação fica em `src/App.tsx`; os componentes de movimento e Three.js estão em `src/components/`. Os tokens ficam em `src/styles.css` e os efeitos em `src/motion.css`.
 
 As imagens dos projetos são **representações conceituais feitas com HTML/CSS**, identificadas na interface. Não são capturas reais nem dados de produção. Substitua-as por capturas autorizadas antes de apresentar os sistemas como demonstrações visuais fiéis. Não foram adicionados depoimentos, métricas de impacto ou links de demonstração não verificados. ZENITH-OS é apresentado como projeto acadêmico em concepção.
 
@@ -39,3 +39,17 @@ O contato usa o endereço associado à conta GitHub de Liandro. Fontes DM Sans e
 ## Validação
 
 `npm run build` executa TypeScript em modo estrito e gera a versão de produção. A revisão visual em dispositivos reais e as medições de desempenho em produção devem ser feitas após publicar.
+
+## Direção de movimento e retrato
+
+- Retrato fornecido por Liandro, preservado visualmente e codificado em WebP (`public/images/liandro.webp`, cerca de 98 KB).
+- Hero com entrada de letras, revelação da foto e parallax por ponteiro/rolagem.
+- Monograma LC com geometria extrudada em Three.js. Carregado sob demanda; fallback em HTML se WebGL não estiver disponível. Renderização pausada fora da área visível e quando a aba fica oculta; geometrias e listeners descartados ao desmontar.
+- Navegação em tela cheia com foco contido, Escape e restauração de foco.
+- Troca circular de tema via View Transitions quando disponível; troca direta nos demais casos.
+- Perspectiva nos projetos, botões magnéticos, entradas na rolagem e indicador de progresso.
+- No celular, retrato estável e disposição vertical. A preferência de redução de movimento elimina animações contínuas e parallax.
+
+### Testes
+
+`npm test` valida os fluxos de tema (inclusive armazenamento bloqueado), menu e foco, navegação dos cases, abas por teclado, processo e cópia de contato em DOM simulado. Esses testes não substituem inspeção visual e verificação de WebGL em navegador real.
