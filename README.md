@@ -1,10 +1,10 @@
 # Liandro Chaves — Portfólio
 
-Portfólio pessoal em React e TypeScript, desenvolvido a partir do documento de direção criativa fornecido por Liandro.
+Portfólio em React, TypeScript, Vite e Three.js. Direção visual de estúdio digital: grafite, verde-lima, tipografia expressiva e uma jornada tridimensional autoral a partir das iniciais LC.
 
 ## Executar
 
-Requer Node.js 22.12+ (ou 24+) e npm.
+Requer Node.js 22.12+ ou 24+ e npm.
 
 ```bash
 npm ci
@@ -14,56 +14,41 @@ npm run dev
 ```bash
 npm run build
 npm run preview
+npm test
 ```
 
-O build estático fica em `dist/`. Pode ser publicado na Vercel, Netlify ou outro host estático. As páginas de projeto usam rotas por hash, sem necessidade de regras de reescrita no servidor.
+O build estático é gerado em `dist/`. Os estudos de caso usam URLs por hash, dispensando reescrita no servidor. Em ambientes que restringem interfaces de rede, execute `npx vite --host 127.0.0.1`.
 
-## Experiência
+## Conteúdo e estrutura
 
-- Tema claro inicial e tema escuro com preferência persistida antes da primeira pintura.
-- Layout responsivo, menu móvel e link para pular ao conteúdo.
-- Estudos de caso com URLs próprias por hash, contexto, solução, decisões em abas e aprendizados.
-- Processo interativo com quatro etapas e representação orbital no desktop.
-- Galeria modal nativa com Escape, foco contido e retorno ao acionador.
-- Contato por e-mail, cópia do endereço e GitHub.
-- Alternativa para redução de movimento.
+- `src/data.ts`: projetos, participação, tecnologias, contexto, decisões e etapas de trabalho.
+- `src/App.tsx`: navegação, projetos, estudos de caso, processo, tema e contato.
+- `src/components/Motion.tsx`: abertura, carregamento progressivo e interações de movimento.
+- `src/components/HeroVisual.tsx`: jornada LC Three.js; mantém também o renderer de retrato compatível com a versão anterior.
+- `src/components/Monogram.tsx`: monograma LC tridimensional nas seções de processo e contato.
+- `src/styles.css`: tokens de tema, componentes, estudos de caso e layout responsivo.
+- `src/motion.css`: composição da abertura, movimento e alternativas estáticas.
 
-## Conteúdo
+O tema inicial é escuro; a escolha claro/escuro fica persistida. A tipografia usa fontes do sistema e Georgia, sem requisições externas de fontes. Fotos anteriores permanecem em `public/images/`; o retrato com sorriso aparece na assinatura e o retrato de estúdio na apresentação.
 
-Edite `src/data.ts` para atualizar projetos e etapas. A aplicação fica em `src/App.tsx`; os componentes de movimento e Three.js estão em `src/components/`. Os tokens ficam em `src/styles.css` e os efeitos em `src/motion.css`.
+## Movimento e acessibilidade
 
-As imagens dos projetos são **representações conceituais feitas com HTML/CSS**, identificadas na interface. Não são capturas reais nem dados de produção. Substitua-as por capturas autorizadas antes de apresentar os sistemas como demonstrações visuais fiéis. Não foram adicionados depoimentos, métricas de impacto ou links de demonstração não verificados. ZENITH-OS é apresentado como projeto acadêmico em concepção.
+A abertura é uma cena persistente com três capítulos: partículas representam a ideia; uma assinatura LC extrudada ganha forma; o objeto se desdobra em três camadas de sistema. A rolagem controla a transformação continuamente, sem interceptar roda do mouse ou gestos. Os botões de capítulos permitem navegar diretamente e o link de projetos permite pular a experiência.
 
-O contato usa o endereço associado à conta GitHub de Liandro. Fontes DM Sans e Manrope são carregadas do Google Fonts, com fontes locais de fallback. Não há analytics, formulário com coleta de dados ou dependência de backend.
+`SignatureScene.ts` concentra materiais, geometria e shader de partículas. `signatureGeometry.ts` define amostragem determinística e progressão com um intervalo estável para leitura da assinatura. Sem modelos, fontes ou texturas externas para o 3D. Ponteiro influencia orientação e afastamento local das partículas; a câmera ajusta o enquadramento à proporção da tela.
+
+Three.js permanece em chunks separados. A cena usa 1.600 partículas no celular ou 3.600 no desktop, com limites de densidade de pixels. Renderizações pausam fora da tela e com a aba oculta; o botão de pausa interrompe movimento ambiente e reação ao ponteiro, mantendo a navegação entre capítulos. Com redução de movimento a abertura não ocupa múltiplas alturas de tela: os capítulos funcionam como seleções estáticas. Recursos são descartados ao desmontar, o contexto WebGL pode ser restaurado e a assinatura HTML/CSS aparece durante carregamento ou indisponibilidade de WebGL.
+
+A referência criativa foi o caráter imersivo de https://www.igloo.inc/, com composição, geometria, narrativa e código próprios para Liandro. Não são usados assets, áudio ou código da referência.
+
+A navegação móvel mantém foco contido e fecha com Escape. Os estudos de caso preservam abas operáveis por teclado, modal nativo, retorno de foco e links próprios. Há link para pular ao conteúdo e confirmação da cópia do e-mail.
+
+## Fidelidade do conteúdo
+
+As prévias dos projetos são **representações conceituais em HTML/CSS**, identificadas como ilustrativas. Não são capturas reais. Não foram inventados depoimentos, métricas ou demonstrações. ZENITH-OS permanece identificado como projeto acadêmico em concepção; Instituto Brotar preserva o crédito de colaboração.
+
+O contato usa `mailto:` e a API de clipboard, sem backend ou coleta de dados. Imagens de retrato são versões de estúdio geradas anteriormente a partir das referências fornecidas por Liandro.
 
 ## Validação
 
-`npm run build` executa TypeScript em modo estrito e gera a versão de produção. A revisão visual em dispositivos reais e as medições de desempenho em produção devem ser feitas após publicar.
-
-## Direção de movimento e retrato
-
-- Retrato de estúdio gerado a partir da foto fornecida por Liandro, com remoção do colar, troca de roupa e cenário e instruções de preservação da identidade. Arquivo usado: `public/images/liandro-smile.webp` (cerca de 144 KB). A versão anterior foi preservada.
-- Hero com entrada de letras, revelação da foto e parallax por ponteiro/rolagem.
-- Monograma LC com geometria extrudada em Three.js. Carregado sob demanda; fallback em HTML se WebGL não estiver disponível. Renderização pausada fora da área visível e quando a aba fica oculta; geometrias e listeners descartados ao desmontar.
-- Navegação em tela cheia com foco contido, Escape e restauração de foco.
-- Troca circular de tema via View Transitions quando disponível; troca direta nos demais casos.
-- Perspectiva nos projetos, botões magnéticos, entradas na rolagem e indicador de progresso.
-- No celular, retrato estável e disposição vertical. A preferência de redução de movimento elimina animações contínuas e parallax.
-
-### Testes
-
-`npm test` valida os fluxos de tema (inclusive armazenamento bloqueado), menu e foco, navegação dos cases, abas por teclado, processo e cópia de contato em DOM simulado. Esses testes não substituem inspeção visual e verificação de WebGL em navegador real.
-
-## Edição de estúdio
-
-Inclui narrativa visual vinculada à rolagem, cartões de projetos sobrepostos em desktops altos, órbitas e satélites no LC 3D, elementos flutuantes no retrato e luz animada. O movimento não altera o rosto da fotografia. Em telas pequenas os projetos continuam em lista; com redução de movimento a narrativa permanece estática e os cartões não ficam sobrepostos.
-
-Retrato criado com a ferramenta integrada de geração de imagens. Direção utilizada: preservar a identidade, proporções faciais, tom de pele, textura, cabelo, barba leve e óculos retangulares; remover colar; usar camiseta preta e sobrecamisa grafite sem marcas; cenário de estúdio cinza com luz violeta discreta; iluminação suave, expressão natural e enquadramento do torso para cima.
-
-## Retrato com sorriso e cena de abertura
-
-O novo retrato tem cabelo curto alinhado e sorriso discreto, mantendo a direção de preservação dos traços, óculos, textura de pele e roupa do retrato anterior. Gerado com a ferramenta integrada de imagens a partir do retrato de estúdio e da foto original como referência de identidade. As versões anteriores permanecem preservadas.
-
-`HeroVisual.tsx` contém duas cenas Three.js: partículas e fitas geométricas atrás do nome, e a fotografia aplicada a um painel 3D com aro luminoso. A fotografia é uma textura rígida sem deformação facial. O retrato HTML só fica oculto depois de a textura carregar e o primeiro quadro ser renderizado; falha de WebGL ou perda de contexto mantém/restaura a imagem HTML. As cenas pausam fora da tela, com aba oculta e com movimento reduzido.
-
-Os testes adicionais verificam fallback sem WebGL, carregamento do retrato, recuperação visual após perda de contexto, descarte do renderer e quadro estático com redução de movimento. A renderização gráfica real e o acabamento visual ainda precisam ser inspecionados em navegador.
+`npm run build` verifica TypeScript em modo estrito e gera a produção. `npm test` cobre amostragem e progressão da geometria, atributos de partículas, capítulos estáticos, pausa, fallback e restauração WebGL, ciclo de vida do renderer, redução de movimento, tema, armazenamento indisponível, menu e foco, navegação, abas, processo e contato. A renderização dos shaders e o acabamento visual da nova cena ainda precisam de inspeção em navegador: a sessão conectada exibia a versão anterior e a política do navegador impediu abrir a prévia isolada por URL de dados. O chunk compartilhado do Three.js pode gerar aviso de tamanho no Vite; ele é carregado sob demanda e não impede a compilação.
