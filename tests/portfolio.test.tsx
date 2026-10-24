@@ -10,4 +10,15 @@ describe('Portfolio interaction flows',()=>{
  it('opens the navigation, contains keyboard focus and restores focus on Escape',async()=>{render(<App/>);const open=screen.getByRole('button',{name:'Abrir menu'});fireEvent.click(open);await waitFor(()=>expect(document.activeElement?.textContent).toBe('Projetos'));fireEvent.keyDown(window,{key:'Tab',shiftKey:true});expect(document.activeElement).toBe(screen.getByRole('button',{name:'Fechar menu'}));fireEvent.keyDown(window,{key:'Escape'});expect(screen.getByRole('button',{name:'Abrir menu'})).toBe(document.activeElement);expect(document.body.style.overflow).toBe('')});
  it('opens a case, switches decision tabs by keyboard, and returns home',()=>{render(<App/>);act(()=>{location.hash='#/projetos/joao-de-barro';window.dispatchEvent(new HashChangeEvent('hashchange'))});expect(screen.getByRole('heading',{level:1}).textContent).toContain('João-de-Barro');fireEvent.keyDown(screen.getByRole('tab',{name:'Interface'}),{key:'ArrowRight'});expect(screen.getByRole('tab',{name:'Regras de negócio'}).getAttribute('aria-selected')).toBe('true');expect(screen.getByRole('tabpanel').textContent).toContain('Permissões');act(()=>{location.hash='#projetos';window.dispatchEvent(new HashChangeEvent('hashchange'))});expect(screen.getByAltText('Liandro Chaves, desenvolvedor full stack')).toBeTruthy()});
  it('changes process stages and copies the contact address',async()=>{render(<App/>);fireEvent.click(screen.getByRole('button',{name:'Próxima etapa'}));expect(screen.getByRole('heading',{name:'Organizar para construir melhor.'})).toBeTruthy();fireEvent.click(screen.getByRole('button',{name:'liandrochaves18@gmail.com'}));await waitFor(()=>expect(navigator.clipboard.writeText).toHaveBeenCalledWith('liandrochaves18@gmail.com'));expect(await screen.findByRole('button',{name:'E-mail copiado!'})).toBeTruthy()});
+ it('keeps section links relative inside a case and closes its gallery on navigation',()=>{
+  history.replaceState(null,'','/portfolio/#/projetos/joao-de-barro');
+  render(<App/>);
+  expect(screen.getByRole('navigation').querySelector('a')?.getAttribute('href')).toBe('#projetos');
+  fireEvent.click(screen.getByRole('button',{name:'Ampliar prévia ilustrativa de João-de-Barro'}));
+  expect(screen.getByRole('dialog').hasAttribute('open')).toBe(true);
+  act(()=>{location.hash='#sobre';window.dispatchEvent(new HashChangeEvent('hashchange'))});
+  expect(document.querySelector('dialog')?.hasAttribute('open')).toBe(false);
+  expect(document.querySelector('#sobre')).toBeTruthy();
+ });
+
 });

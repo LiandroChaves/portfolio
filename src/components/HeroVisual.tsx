@@ -19,9 +19,9 @@ export default function HeroVisual({ kind }: { kind: 'backdrop' | 'portrait' }) 
   const material = <T extends THREE.Material>(m:T) => { materials.push(m); return m; };
   const metal = material(new THREE.MeshStandardMaterial({ color: 0x8f7bea, metalness: .65, roughness: .23 }));
   const glow = material(new THREE.MeshBasicMaterial({ color: 0xa99aff, transparent: true, opacity: .5 }));
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x4e3e87, 2.2));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x354528, 2.2));
   const light = new THREE.DirectionalLight(0xffffff, 5); light.position.set(3, 5, 6); scene.add(light);
-  const violet = new THREE.PointLight(0x8e65ff, 35, 25); violet.position.set(-4, -1, 4); scene.add(violet);
+  const violet = new THREE.PointLight(0xbaff68, 35, 25); violet.position.set(-4, -1, 4); scene.add(violet);
   const ribbons: THREE.Mesh[] = []; let photoGroup: THREE.Group | undefined;
   let dust: THREE.Points | undefined;
   let active = true, visible = false, frame = 0, lost = false, textureReady = kind === 'backdrop';
@@ -47,19 +47,21 @@ export default function HeroVisual({ kind }: { kind: 'backdrop' | 'portrait' }) 
    const halo=new THREE.Mesh(geometry(new THREE.TorusGeometry(2.05,.018,8,150)),glow);halo.rotation.set(.2,.5,.1);halo.position.z=-.35;group.add(halo);ribbons.push(halo);
    const orbit=new THREE.Mesh(geometry(new THREE.TorusGeometry(2.3,.012,8,150)),glow);orbit.rotation.set(-.4,-.6,.3);orbit.position.z=-.5;group.add(orbit);ribbons.push(orbit);
   } else {
+   camera.position.z = 9.5;
+   const core = new THREE.Mesh(geometry(new THREE.IcosahedronGeometry(1.65, 1)), metal);
+   core.rotation.set(.3,.5,.2);group.add(core);ribbons.push(core);
+   const cage = new THREE.LineSegments(geometry(new THREE.WireframeGeometry(geometry(new THREE.IcosahedronGeometry(2.05, 2)))), material(new THREE.LineBasicMaterial({color:0x9bb66c,transparent:true,opacity:.35})));
+   group.add(cage);
    for(let i=0;i<3;i++){
-    const ring=new THREE.Mesh(geometry(new THREE.TorusGeometry(2.5+i*.33,.06+i*.035,12,160)),i===1?glow:metal);
-    ring.rotation.set(.65+i*.35,.3+i*.5,i*.8);ring.position.set(-3.2,1.5,-1-i*.5);group.add(ring);ribbons.push(ring);
+    const ring=new THREE.Mesh(geometry(new THREE.TorusGeometry(2.65+i*.18,i===0?.035:.012,8,120)),i===0?metal:glow);
+    ring.rotation.set(.9+i*.65,.4+i*.7,i*.6);group.add(ring);ribbons.push(ring);
+    const satellite = new THREE.Mesh(geometry(new THREE.OctahedronGeometry(.13+i*.035)),metal);
+    satellite.position.set(Math.cos(i*2.1)*2.85,Math.sin(i*2.1)*2.3,Math.sin(i*2.1)*1.4);group.add(satellite);ribbons.push(satellite);
    }
-   const knot=new THREE.Mesh(geometry(new THREE.TorusKnotGeometry(1.3,.15,120,12,2,3)),metal);knot.position.set(3.9,2,-2);group.add(knot);ribbons.push(knot);
-   const count=innerWidth<700?100:260;const coords=new Float32Array(count*3);
-   // Deterministic low-discrepancy particle field; no large textures or post-processing.
-   for(let i=0;i<count;i++){coords[i*3]=((i*.61803398875)%1-.5)*16;coords[i*3+1]=((i*.41421356237)%1-.5)*12;coords[i*3+2]=((i*.73205080757)%1-.5)*6;}
+   const count=innerWidth<700?70:160;const coords=new Float32Array(count*3);
+   for(let i=0;i<count;i++){coords[i*3]=((i*.61803398875)%1-.5)*8;coords[i*3+1]=((i*.41421356237)%1-.5)*8;coords[i*3+2]=((i*.73205080757)%1-.5)*4;}
    const dustGeo=geometry(new THREE.BufferGeometry());dustGeo.setAttribute('position',new THREE.BufferAttribute(coords,3));
-   const dustMaterial=material(new THREE.PointsMaterial({color:0x9071ee,size:.025,transparent:true,opacity:.65,depthWrite:false}));
-   dust=new THREE.Points(dustGeo,dustMaterial);group.add(dust);
-   const arcPoints=Array.from({length:100},(_,i)=>{const t=i/99*Math.PI*2;return new THREE.Vector3(Math.cos(t)*6,Math.sin(t)*2.3,Math.sin(t*2)*.8)});
-   const arc=new THREE.Mesh(geometry(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(arcPoints,true),150,.008,5,true)),glow);arc.rotation.z=-.4;group.add(arc);ribbons.push(arc);
+   dust=new THREE.Points(dustGeo,material(new THREE.PointsMaterial({color:0x94b567,size:.025,transparent:true,opacity:.6,depthWrite:false})));group.add(dust);
   }
   el.appendChild(renderer.domElement);
   function draw(time:number){
@@ -82,7 +84,7 @@ export default function HeroVisual({ kind }: { kind: 'backdrop' | 'portrait' }) 
   const move=(e:PointerEvent)=>{if(motion.matches||!finePointer.matches||e.pointerType!=='mouse')return;const rect=(parent??el).getBoundingClientRect();pointer.set(THREE.MathUtils.clamp((e.clientX-rect.left)/rect.width*2-1,-1,1),THREE.MathUtils.clamp((e.clientY-rect.top)/rect.height*2-1,-1,1));};
   const leave=()=>pointer.set(0,0);
   const onScroll=()=>{const rect=parent?.getBoundingClientRect();scroll=rect?THREE.MathUtils.clamp(-rect.top/rect.height,0,1):0;};
-  const theme=()=>{const dark=document.documentElement.dataset.theme==='dark';metal.color.set(dark?0xb7a6ff:0x7a60cf);glow.color.set(dark?0xbbaaff:0x8065cc);start();};
+  const theme=()=>{const dark=document.documentElement.dataset.theme==='dark';metal.color.set(dark?0xb4e66f:0x658239);glow.color.set(dark?0xd4ff8f:0x638633);start();};
   const themeObserver=new MutationObserver(theme);themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});theme();
   const contextLost=(e:Event)=>{e.preventDefault();lost=true;cancelAnimationFrame(frame);el.classList.remove('scene-ready');if(kind==='portrait')el.parentElement?.classList.remove('portrait-rendered');};
   renderer.domElement.addEventListener('webglcontextlost',contextLost);
