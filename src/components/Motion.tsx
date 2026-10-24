@@ -6,22 +6,46 @@ export function Sculpture({ variant = 'hero' }: { variant?: 'hero' | 'process' |
   useEffect(() => { const el = host.current; if (!el) return; const observer = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setReady(true); observer.disconnect(); } }, { rootMargin: '150px' }); observer.observe(el); return () => observer.disconnect(); }, []);
   return <div ref={host} className={`sculpture-slot slot-${variant}`}>{ready && <Suspense fallback={<span className="sculpture-fallback" aria-hidden="true">LC·</span>}><Monogram variant={variant}/></Suspense>}</div>;
 }
+const chapters = [
+ { name: 'A ideia', title: <>Toda ideia<br/>começa com<br/><em>uma faísca.</em></>, text: 'Sou Liandro Chaves. Desenvolvedor full stack, curioso por natureza. Transformo possibilidades em experiências digitais.' },
+ { name: 'A construção', title: <>O invisível<br/>ganha<br/><em>identidade.</em></>, text: 'Interface, lógica e dados. Cada detalhe tem um papel. Cada escolha aproxima o código de quem vai usar.' },
+ { name: 'O sistema', title: <>Tudo se conecta.<br/>E ganha<br/><em>propósito.</em></>, text: 'Sistemas que organizam rotinas, aproximam pessoas e dão espaço para novas ideias. Conheça o que já construí.' },
+];
 export function CinematicHero(){
  const hero = useRef<HTMLElement>(null);
+ const [chapter, setChapter] = useState(0);
+ const [paused, setPaused] = useState(false);
  useEffect(()=>{
-  const el=hero.current; if(!el)return; const media=matchMedia('(prefers-reduced-motion: reduce)'); let frame=0;
-  const scroll=()=>{if(frame)return;frame=requestAnimationFrame(()=>{frame=0;const y=media.matches?0:Math.min(1,Math.max(0,-el.getBoundingClientRect().top/el.offsetHeight));el.style.setProperty('--hero-progress',String(y));})};
-  const move=(e:PointerEvent)=>{if(media.matches||e.pointerType!=='mouse')return;const r=el.getBoundingClientRect();el.style.setProperty('--pointer-x',String((e.clientX-r.left)/r.width-.5));el.style.setProperty('--pointer-y',String((e.clientY-r.top)/r.height-.5));};
-  const reset=()=>{el.style.setProperty('--pointer-x','0');el.style.setProperty('--pointer-y','0')};
-  const preference=()=>{reset();scroll()};
-  window.addEventListener('scroll',scroll,{passive:true});el.addEventListener('pointermove',move);el.addEventListener('pointerleave',reset);media.addEventListener('change',preference);scroll();
-  return()=>{cancelAnimationFrame(frame);window.removeEventListener('scroll',scroll);el.removeEventListener('pointermove',move);el.removeEventListener('pointerleave',reset);media.removeEventListener('change',preference)};
+  const el=hero.current;if(!el)return;
+  const media=matchMedia('(prefers-reduced-motion: reduce)');let frame=0;
+  const update=()=>{if(frame||media.matches)return;frame=requestAnimationFrame(()=>{
+   frame=0;const distance=Math.max(1,el.offsetHeight-innerHeight);
+   const progress=Math.max(0,Math.min(1,-el.getBoundingClientRect().top/distance));
+   el.dataset.sceneProgress=String(progress);
+   el.style.setProperty('--hero-progress',String(progress));
+   setChapter(Math.min(2,Math.floor(progress*3)));
+  })};
+  const preference=()=>{if(media.matches){cancelAnimationFrame(frame);frame=0;el.dataset.sceneProgress='0';setChapter(0)}else update()};
+  window.addEventListener('scroll',update,{passive:true});window.addEventListener('resize',update);media.addEventListener('change',preference);update();
+  return()=>{cancelAnimationFrame(frame);window.removeEventListener('scroll',update);window.removeEventListener('resize',update);media.removeEventListener('change',preference)};
  },[]);
- return <section ref={hero} className="cinematic-hero wrap">
-  <div className="hero-kicker"><span><i/> DESENVOLVEDOR FULL STACK</span><span>LIMOEIRO DO NORTE, CE / BR</span></div>
-  <div className="hero-layout"><div className="hero-intro"><span className="eyebrow">CÓDIGO COM INTENÇÃO. DESIGN COM PERSONALIDADE.</span><h1>Transformo<br/>ideias em<br/><span className="hero-outline">experiências</span><span className="hero-dot">.</span></h1><p>Sou Liandro Chaves. Conecto interface, lógica e dados para construir sistemas que fazem sentido para quem usa.</p><div className="hero-actions"><a className="pill primary magnetic" href="#projetos">Explore meus projetos <span>↗</span></a><a className="hero-about" href="#sobre">Conheça meu universo <span>↓</span></a></div></div>
-  <div className="hero-lab"><span className="lab-coordinate">EXPERIMENTO 001 / IDEIAS EM ÓRBITA</span><div className="orb-fallback" aria-hidden="true"><i/><i/><i/><b>LC</b></div><Suspense fallback={null}><HeroVisual kind="backdrop"/></Suspense><span className="lab-label lab-label-a">INTERFACE</span><span className="lab-label lab-label-b">LÓGICA</span><span className="lab-label lab-label-c">EXPERIÊNCIA</span><div className="lab-bottom"><span><i/> THREE.JS / TEMPO REAL</span><span aria-hidden="true">MOVA O CURSOR ↗</span></div></div></div>
-  <div className="hero-baseline"><a href="#sobre" className="hero-signature"><img src="/images/liandro-smile.webp" width="52" height="52" alt="Liandro Chaves, desenvolvedor full stack" fetchPriority="high"/><span><strong>Liandro Chaves</strong><small>Curiosidade que vira construção.</small></span></a><span className="hero-stack">REACT / TYPESCRIPT / NODE.JS</span><a className="scroll-cue" href="#projetos">CONHEÇA MEU TRABALHO <span>↓</span></a></div>
+ function selectChapter(index:number){
+  const el=hero.current;if(!el)return;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){el.dataset.sceneProgress=String(index/2);setChapter(index);return;}
+  const distance=Math.max(1,el.offsetHeight-innerHeight);
+  window.scrollTo({top:scrollY+el.getBoundingClientRect().top+distance*(index===0?0:index===1?.5:1),behavior:'smooth'});
+ }
+ return <section ref={hero} className="cinematic-hero signature-journey" aria-label="Da ideia ao sistema" data-scene-progress="0" data-scene-paused={paused}>
+  <div className="signature-stage">
+   <div className="signature-atmosphere" aria-hidden="true"/><div className="signature-floor" aria-hidden="true"/>
+   <div className="orb-fallback signature-fallback" aria-hidden="true"><i/><i/><i/><b>LC</b></div>
+   <Suspense fallback={null}><HeroVisual kind="backdrop"/></Suspense>
+   <div className="signature-topline"><span><i/> LIANDRO CHAVES / DESENVOLVEDOR FULL STACK</span><span>CEARÁ, BRASIL ↗</span></div>
+   <div className="signature-copy" data-chapter={chapter}><span className="eyebrow">0{chapter+1} / {chapters[chapter].name.toUpperCase()}</span><h1>{chapters[chapter].title}</h1><p>{chapters[chapter].text}</p><a className="pill primary magnetic" href="#projetos">Explore meus projetos <span>↗</span></a></div>
+   <div className="signature-caption" aria-hidden="true"><span>LC / ESTUDO DE UMA IDEIA</span><span>{['MATÉRIA EM MOVIMENTO','DA LÓGICA À FORMA','INTERFACE / LÓGICA / DADOS'][chapter]}</span></div>
+   <div className="signature-bottom"><a href="#sobre" className="hero-signature"><img src="/images/liandro-smile.webp" width="44" height="44" alt="Liandro Chaves, desenvolvedor full stack" fetchPriority="high"/><span><strong>Liandro Chaves</strong><small>Curiosidade que vira construção.</small></span></a><div className="chapter-controls" role="group" aria-label="Etapas da experiência">{chapters.map((item,index)=><button key={item.name} onClick={()=>selectChapter(index)} aria-pressed={chapter===index} aria-label={`Explorar fase ${item.name}`}><span>0{index+1}</span>{item.name}</button>)}</div><button className="scene-pause" aria-pressed={paused} onClick={()=>setPaused(value=>!value)}>{paused?'Retomar movimento ↗':'Pausar movimento Ⅱ'}</button></div>
+   <a className="signature-scroll" href="#projetos">ROLE PARA TRANSFORMAR <span>↓</span><span className="sr-only"> ou vá direto aos projetos</span></a>
+  </div>
  </section>
 }
 export function usePageMotion(route:string){

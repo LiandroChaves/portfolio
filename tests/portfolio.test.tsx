@@ -21,4 +21,18 @@ describe('Portfolio interaction flows',()=>{
   expect(document.querySelector('#sobre')).toBeTruthy();
  });
 
+ it('lets reduced-motion visitors explore every chapter without scrolling and pause the scene',()=>{
+  render(<App/>);
+  fireEvent.click(screen.getByRole('button',{name:'Explorar fase A construção'}));
+  expect(screen.getByRole('heading',{level:1}).textContent).toContain('identidade');
+  expect(document.querySelector('.signature-journey')?.getAttribute('data-scene-progress')).toBe('0.5');
+  fireEvent.click(screen.getByRole('button',{name:'Explorar fase O sistema'}));
+  expect(screen.getByRole('heading',{level:1}).textContent).toContain('propósito');
+  expect(screen.getByRole('button',{name:'Explorar fase O sistema'}).getAttribute('aria-pressed')).toBe('true');
+  fireEvent.click(screen.getByRole('button',{name:'Pausar movimento Ⅱ'}));
+  expect(document.querySelector('.signature-journey')?.getAttribute('data-scene-paused')).toBe('true');
+  fireEvent.click(screen.getByRole('button',{name:'Retomar movimento ↗'}));
+  expect(document.querySelector('.signature-journey')?.getAttribute('data-scene-paused')).toBe('false');
+ });
+
 });

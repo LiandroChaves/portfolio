@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { createSignatureScene } from './SignatureScene';
 
 const PORTRAIT = '/images/liandro-smile.webp';
-/** Two independent scenes: a full hero backdrop and an undistorted portrait on a 3D plane. */
+/** Signature world with an optional legacy portrait renderer and HTML fallback. */
 export default function HeroVisual({ kind }: { kind: 'backdrop' | 'portrait' }) {
  const host = useRef<HTMLDivElement>(null);
  useEffect(() => {
@@ -23,7 +24,7 @@ export default function HeroVisual({ kind }: { kind: 'backdrop' | 'portrait' }) 
   const light = new THREE.DirectionalLight(0xffffff, 5); light.position.set(3, 5, 6); scene.add(light);
   const violet = new THREE.PointLight(0xbaff68, 35, 25); violet.position.set(-4, -1, 4); scene.add(violet);
   const ribbons: THREE.Mesh[] = []; let photoGroup: THREE.Group | undefined;
-  let dust: THREE.Points | undefined;
+  let signature: ReturnType<typeof createSignatureScene> | undefined;
   let active = true, visible = false, frame = 0, lost = false, textureReady = kind === 'backdrop';
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const finePointer = matchMedia('(pointer: fine)');
@@ -47,50 +48,41 @@ export default function HeroVisual({ kind }: { kind: 'backdrop' | 'portrait' }) 
    const halo=new THREE.Mesh(geometry(new THREE.TorusGeometry(2.05,.018,8,150)),glow);halo.rotation.set(.2,.5,.1);halo.position.z=-.35;group.add(halo);ribbons.push(halo);
    const orbit=new THREE.Mesh(geometry(new THREE.TorusGeometry(2.3,.012,8,150)),glow);orbit.rotation.set(-.4,-.6,.3);orbit.position.z=-.5;group.add(orbit);ribbons.push(orbit);
   } else {
-   camera.position.z = 9.5;
-   const core = new THREE.Mesh(geometry(new THREE.IcosahedronGeometry(1.65, 1)), metal);
-   core.rotation.set(.3,.5,.2);group.add(core);ribbons.push(core);
-   const cage = new THREE.LineSegments(geometry(new THREE.WireframeGeometry(geometry(new THREE.IcosahedronGeometry(2.05, 2)))), material(new THREE.LineBasicMaterial({color:0x9bb66c,transparent:true,opacity:.35})));
-   group.add(cage);
-   for(let i=0;i<3;i++){
-    const ring=new THREE.Mesh(geometry(new THREE.TorusGeometry(2.65+i*.18,i===0?.035:.012,8,120)),i===0?metal:glow);
-    ring.rotation.set(.9+i*.65,.4+i*.7,i*.6);group.add(ring);ribbons.push(ring);
-    const satellite = new THREE.Mesh(geometry(new THREE.OctahedronGeometry(.13+i*.035)),metal);
-    satellite.position.set(Math.cos(i*2.1)*2.85,Math.sin(i*2.1)*2.3,Math.sin(i*2.1)*1.4);group.add(satellite);ribbons.push(satellite);
-   }
-   const count=innerWidth<700?70:160;const coords=new Float32Array(count*3);
-   for(let i=0;i<count;i++){coords[i*3]=((i*.61803398875)%1-.5)*8;coords[i*3+1]=((i*.41421356237)%1-.5)*8;coords[i*3+2]=((i*.73205080757)%1-.5)*4;}
-   const dustGeo=geometry(new THREE.BufferGeometry());dustGeo.setAttribute('position',new THREE.BufferAttribute(coords,3));
-   dust=new THREE.Points(dustGeo,material(new THREE.PointsMaterial({color:0x94b567,size:.025,transparent:true,opacity:.6,depthWrite:false})));group.add(dust);
+   camera.position.z = 8.7;
+   signature = createSignatureScene(innerWidth < 700);
+   scene.add(signature.root);
   }
   el.appendChild(renderer.domElement);
   function draw(time:number){
    frame=0;if(!active||!visible||document.hidden||lost||!textureReady)return;
-   const dt=previous?Math.min((time-previous)/1000,.05):0;previous=time;if(!motion.matches)clock+=dt;
-   const target=motion.matches?new THREE.Vector2():pointer;smooth.lerp(target,1-Math.exp(-dt*6));
+   const calm=motion.matches||parent?.dataset.scenePaused==='true';
+   const dt=previous?Math.min((time-previous)/1000,.05):0;previous=time;if(!calm)clock+=dt;
+   const target=calm?new THREE.Vector2():pointer;smooth.lerp(target,1-Math.exp(-dt*6));
    if(photoGroup){photoGroup.rotation.set(-smooth.y*.08,smooth.x*.13,motion.matches?0:Math.sin(clock*.55)*.012);photoGroup.position.y=motion.matches?0:Math.sin(clock*.8)*.025;}
-   else {group.rotation.set(smooth.y*.05,smooth.x*.08,motion.matches?0:scroll*.12);group.position.y=motion.matches?0:scroll*.8;}
+   else {signature?.update(scroll,clock,smooth,calm,Math.min(devicePixelRatio,innerWidth<700?1.25:1.75));}
    ribbons.forEach((mesh,i)=>{if(!motion.matches){mesh.rotation.z+=dt*(i%2===0?.09:-.07);if(kind==='backdrop')mesh.rotation.y+=dt*.04;}});
-   if(dust&&!motion.matches){dust.rotation.y=clock*.025;dust.position.x=smooth.x*.2;}
+
    light.position.x=3+smooth.x*2;
    renderer.render(scene,camera);
    el.classList.add('scene-ready');if(kind==='portrait')el.parentElement?.classList.add('portrait-rendered');
-   if(!motion.matches)frame=requestAnimationFrame(draw);
+   if(!calm)frame=requestAnimationFrame(draw);
   }
   function start(){cancelAnimationFrame(frame);frame=0;previous=0;if(active&&visible&&!document.hidden&&!lost&&textureReady)frame=requestAnimationFrame(draw);}
-  const resize=()=>{const {width,height}=el.getBoundingClientRect();if(!width||!height)return;renderer.setSize(width,height);camera.aspect=width/height;if(kind==='portrait'){const fitHeight=Math.max(4.8,3.65/camera.aspect);camera.position.z=(fitHeight/2)/Math.tan(THREE.MathUtils.degToRad(camera.fov/2));}camera.updateProjectionMatrix();start();};
+  const resize=()=>{const {width,height}=el.getBoundingClientRect();if(!width||!height)return;renderer.setSize(width,height);camera.aspect=width/height;if(kind==='portrait'){const fitHeight=Math.max(4.8,3.65/camera.aspect);camera.position.z=(fitHeight/2)/Math.tan(THREE.MathUtils.degToRad(camera.fov/2));}else{camera.position.z=Math.max(8.7,7.2/camera.aspect);}camera.updateProjectionMatrix();start();};
   const sizeObserver=new ResizeObserver(resize);sizeObserver.observe(el);resize();
   const observer=new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;start();});observer.observe(el);
   const move=(e:PointerEvent)=>{if(motion.matches||!finePointer.matches||e.pointerType!=='mouse')return;const rect=(parent??el).getBoundingClientRect();pointer.set(THREE.MathUtils.clamp((e.clientX-rect.left)/rect.width*2-1,-1,1),THREE.MathUtils.clamp((e.clientY-rect.top)/rect.height*2-1,-1,1));};
   const leave=()=>pointer.set(0,0);
-  const onScroll=()=>{const rect=parent?.getBoundingClientRect();scroll=rect?THREE.MathUtils.clamp(-rect.top/rect.height,0,1):0;};
-  const theme=()=>{const dark=document.documentElement.dataset.theme==='dark';metal.color.set(dark?0xb4e66f:0x658239);glow.color.set(dark?0xd4ff8f:0x638633);start();};
+  const onScroll=()=>{scroll=THREE.MathUtils.clamp(Number(parent?.dataset.sceneProgress ?? 0),0,1);if(motion.matches||parent?.dataset.scenePaused==='true')start();};
+  const progressObserver=new MutationObserver(entries=>{onScroll();if(entries.some(entry=>entry.attributeName==='data-scene-paused'))start();});if(parent)progressObserver.observe(parent,{attributes:true,attributeFilter:['data-scene-progress','data-scene-paused']});onScroll();
+  const theme=()=>{const dark=document.documentElement.dataset.theme==='dark';metal.color.set(dark?0xb4e66f:0x658239);glow.color.set(dark?0xd4ff8f:0x638633);signature?.setTheme(dark);start();};
   const themeObserver=new MutationObserver(theme);themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});theme();
   const contextLost=(e:Event)=>{e.preventDefault();lost=true;cancelAnimationFrame(frame);el.classList.remove('scene-ready');if(kind==='portrait')el.parentElement?.classList.remove('portrait-rendered');};
-  renderer.domElement.addEventListener('webglcontextlost',contextLost);
+  const contextRestored=()=>{lost=false;start();};
+  renderer.domElement.addEventListener('webglcontextlost',contextLost);renderer.domElement.addEventListener('webglcontextrestored',contextRestored);
   const preference=()=>{pointer.set(0,0);smooth.set(0,0);start();};
   (parent??el).addEventListener('pointermove',move,{passive:true});(parent??el).addEventListener('pointerleave',leave);window.addEventListener('scroll',onScroll,{passive:true});document.addEventListener('visibilitychange',start);motion.addEventListener('change',preference);
-  return()=>{active=false;cancelAnimationFrame(frame);sizeObserver.disconnect();observer.disconnect();themeObserver.disconnect();(parent??el).removeEventListener('pointermove',move);(parent??el).removeEventListener('pointerleave',leave);window.removeEventListener('scroll',onScroll);document.removeEventListener('visibilitychange',start);motion.removeEventListener('change',preference);renderer.domElement.removeEventListener('webglcontextlost',contextLost);el.parentElement?.classList.remove('portrait-rendered');geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());renderer.dispose();renderer.domElement.remove();};
+  return()=>{active=false;cancelAnimationFrame(frame);sizeObserver.disconnect();observer.disconnect();themeObserver.disconnect();progressObserver.disconnect();signature?.dispose();(parent??el).removeEventListener('pointermove',move);(parent??el).removeEventListener('pointerleave',leave);window.removeEventListener('scroll',onScroll);document.removeEventListener('visibilitychange',start);motion.removeEventListener('change',preference);renderer.domElement.removeEventListener('webglcontextlost',contextLost);renderer.domElement.removeEventListener('webglcontextrestored',contextRestored);el.parentElement?.classList.remove('portrait-rendered');geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());renderer.dispose();renderer.domElement.remove();};
  },[kind]);
  return <div ref={host} className={`hero-webgl hero-webgl-${kind}`} aria-hidden="true"/>;
 }
